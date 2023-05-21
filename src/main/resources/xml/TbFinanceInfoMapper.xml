@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.demo.finance.dao.TbFinanceInfoMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.demo.finance.pojo.TbFinanceInfo">
+        <id column="id" property="id" />
+        <result column="claimer_user_id" property="claimerUserId" />
+        <result column="reason" property="reason" />
+        <result column="balance" property="balance" />
+        <result column="recorder_user_id" property="recorderUserId" />
+        <result column="is_deleted" property="isDeleted" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+        <result column="sum" property="sum" />
+        <result column="type" property="type" />
+        <result column="reason_time" property="reasonTime" />
+    </resultMap>
+    <update id="updateBatchBalance" parameterType="java.util.List">
+        <foreach collection="tbFinanceInfoList" item="item" index="index" open="" close="" separator=";">
+            update tb_finance_info
+            <set>
+                <if test="item.balance != null">
+                    balance = #{item.balance},
+                </if>
+            </set>
+            where
+            id = #{item.id}
+        </foreach>
+    </update>
+    <delete id="deleteRecordByUserId">
+        update  tb_finance_info  SET is_deleted=#{isDeleted} WHERE claimer_user_id=#{id}
+    </delete>
+    <select id="getLatestLatestBalanceByTime" resultType="java.lang.String">
+        SELECT balance FROM tb_finance_info
+        <where>
+        claimer_user_id=#{claimerUserId}
+        AND   #{updateTime}>=update_time
+        AND is_deleted=0
+        </where>
+        ORDER BY update_time DESC,id DESC LIMIT 1;
+    </select>
+    <select id="queryPage" resultType="com.demo.finance.pojo.vo.TbFinanceInfoVO">
+        SELECT
+            A.*,
+            B1.user_name AS claimerUserName,
+            B2.user_name AS recorderUserName
+        FROM
+            tb_finance_info AS A
+                JOIN tb_user AS B1 ON A.claimer_user_id = B1.id
+                JOIN tb_user AS B2 ON A.recorder_user_id = B2.id
+        <where>
+            <if test="pageQO.claimerUserName != null and pageQO.claimerUserName != '' ">
+                (B1.user_name like CONCAT('%', #{pageQO.claimerUserName}, '%') OR A.reason like CONCAT('%', #{pageQO.claimerUserName}, '%'))
+            </if>
+            <if test="pageQO.startTime !=null ">
+                AND A.update_time &gt;= #{pageQO.startTime}
+            </if>
+            <if test="pageQO.endTime !=null ">
+                AND A.update_time &lt;= #{pageQO.endTime}
+            </if>
+            <if test="pageQO.claimerUserId !=null ">
+                AND A.claimer_user_id = #{pageQO.claimerUserId}
+            </if>
+            AND is_deleted=#{isNotDeleted}
+
+        </where>
+        <if test=" pageQO.updateTimeOrder =='descending' ">
+            ORDER BY A.update_time DESC, id DESC
+        </if>
+        <if test=" pageQO.updateTimeOrder =='ascending' ">
+            ORDER BY A.update_time ASC, id ASC
+        </if>
+        <if test=" pageQO.claimerUserNameOrder =='descending' ">
+            ORDER BY claimerUserName DESC
+        </if>
+        <if test=" pageQO.claimerUserNameOrder =='ascending' ">
+            ORDER BY claimerUserName ASC
+        </if>
+    </select>
+    <select id="getAdminIdByUserRole" resultType="java.lang.Integer">
+        SELECT id FROM tb_user WHERE type=#{type}
+    </select>
+    <select id="selectRecordByUpdateTime" resultType="com.demo.finance.pojo.TbFinanceInfo">
+        SELECT * FROM tb_finance_info WHERE
+        claimer_user_id=#{claimerUserId}
+        AND is_deleted=#{isDeleted}
+        AND (update_time > #{updateTime} OR (update_time = #{updateTime} AND id>#{id}))
+
+
+    </select>
+    <select id="selectHistory" resultType="com.demo.finance.pojo.TbFinanceInfo">
+        SELECT * FROM tb_finance_info WHERE claimer_user_id=#{id} AND is_deleted=#{code}
+    </select>
+    <select id="selectRange" resultType="com.demo.finance.pojo.TbFinanceInfo">
+        SELECT * FROM tb_finance_info WHERE claimer_user_id=#{id} AND is_deleted=#{code}
+        <if test="startTime !=null ">
+        AND update_time >= #{startTime}
+        </if>
+        <if test="endTime !=null ">
+        AND #{endTime} >= update_time
+        </if>
+    </select>
+
+</mapper>

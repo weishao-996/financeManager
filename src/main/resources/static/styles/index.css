@@ -1,0 +1,552 @@
+body{
+    width: 100%;
+    height: 100vh;
+    margin: 0px;
+}
+.index{
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction:column
+}
+.menu{
+    width: 100%;
+    height: 55px;
+    background:#252D47;
+    display: flex;
+    justify-content:space-between;
+    align-items:center
+}
+.menu-left{
+    width: 710px;
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items:center;
+    justify-content: flex-start
+}
+.title{
+    width: 260px;
+    height: 100%;
+    font-family: Mierosof YaHel;
+    text-align: center;
+    color: white;
+    font-size: 30px;
+    line-height: 55px;
+}
+.menu-item-list{
+    display: flex;
+    flex-direction: row;
+    align-items:center;
+    justify-content: flex-start
+}
+.menu-item-active{
+    width: 150px;
+    height: 100%;
+    font-family:Arial,"Microsoft Yahe","微软雅黑";
+    text-align: center;
+    color: white;
+    font-size: 20px;
+    line-height: 55px;
+    cursor: pointer;
+    background: #E01818;
+}
+.menu-item-inactive{
+    width: 150px;
+    height: 100%;
+    font-family:Arial,"Microsoft Yahe","微软雅黑";
+    text-align: center;
+    color: white;
+    font-size: 20px;
+    line-height: 55px;
+    cursor: pointer;
+}
+
+.menu-right{
+    width: 240px;
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items:center;
+    justify-content: flex-start
+}
+.menu-userManage{
+    width: 100px;
+    height: 100%;
+    font-family: Mierosof YaHel;
+    text-align: center;
+    color: white;
+    font-size: 15px;
+    line-height: 55px;
+}
+.menu-userManage:hover{
+     cursor: pointer;
+ }
+.menu-loginUser{
+    width: 100px;
+    height: 100%;
+    font-family: Mierosof YaHel;
+    color: white;
+    font-size: 15px;
+    line-height: 55px;
+    margin-left: 5px;
+}
+.user-icon{
+    width: 35px;
+    height: 35px;
+    color: #252D47;
+    font-size:30px;
+    border-radius: 50%;
+    text-align: center;
+    background: white;
+    margin-right: 3px;
+}
+.menu-loginUser:hover{
+    cursor: pointer;
+}
+.main{
+    width: 100%;
+    min-height: 100%;
+    max-height: none;
+    background: #E6EBF5;
+    display: flex;
+    justify-content:center;
+    align-items:center
+}
+.condition-show{
+    width: 100%;
+    height: 100%;
+    margin-left: 260px;
+    margin-right: 260px;
+    background: white;
+    display: flex;
+    flex-direction:column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 0 70px;
+}
+.search-area{
+    height: 38px;
+    width: 100%;
+    padding-top: 45px;
+    padding-bottom: 24px;
+    display: flex;
+    flex-direction: row;
+    justify-content:space-between;
+    align-items:center;
+}
+.search-input-area{
+    height: 38px;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items:center;
+    width: 850px;
+}
+.search-button-area{
+    width: 100px;
+    height: 38px;
+    display: flex;
+    flex-direction: row;
+    align-items:center;
+    justify-content:end;
+}
+.el-input{
+    width: 385px;
+    align-items:center;
+}
+/* 修改输入框的边框颜色为红色 */
+.my-input .el-input__inner {
+    border-color: #216DF5;
+}
+.my-date-picker .el-date-editor {
+    border: 1px solid #216DF5;
+}
+.my-date-picker.el-date-editor--daterange.el-input__inner{
+    border: 1px solid #216DF5;
+    width: 360px;
+    margin-left: 5px;
+    margin-right: 5px;
+}
+.search-button{
+    width: 80px;
+    height: 38px;
+    background:#E9F3FE ;
+    border: 1px solid #216DF5;
+    color: #216DF5;
+    font-size:18px;
+    font-family: "Microsoft Yahei", sans-serif;
+    text-align: center;
+    line-height: 38px;
+    border-radius: 5px;
+}
+.search-button:hover{
+    cursor: pointer;
+}
+
+.table-area{
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items:center;
+}
+.el-table--striped .el-table__body tr.el-table__row--striped td{
+    background-color: #F4F7FD!important;
+}
+
+
+/deep/ .table-head {
+    background: #F4F7FD;
+    height: 50px;
+    border: 1px solid #000;
+}
+
+.page-area{
+    width: 100%;
+    height: 40px;
+    display: flex;
+    flex-direction: row;
+    justify-content:space-between;
+    align-items:center;
+    border-bottom: 1px solid  #B3BCCB;
+}
+.page-record{
+    display: flex;
+    flex-direction: row;
+    align-items:center;
+}
+.page-record-number{
+    color: black;
+    font-size:14px;
+    font-family: "Microsoft Yahei", sans-serif;
+    text-align: center;
+    line-height: 38px;
+}
+/*.el-input el-input--suffix.el-input__inner{*/
+/*    width: 50px;*/
+/*}*/
+.my-select >.el-input{
+    width: 100px;
+    margin-left: 2px;
+}
+.my-select >.el-input>.el-input__inner{
+    height: 25px;
+}
+.my-select>.el-input>.el-input__suffix>.el-input__suffix-inner>.el-input__icon{
+    line-height: 0px;
+}
+
+.my-table-input>.el-input__inner{
+    width: 130px;
+    height: 32px;
+}
+.my-table-date-input>.el-input__inner{
+    width: 130px;
+    height: 32px;
+    padding-right:10px
+}
+.my-table-date-input>.el-input__prefix>.el-input__icon{
+    line-height: 0px;
+}
+.edit-button-area{
+    display: flex;
+    flex-direction: row;
+    align-items:center;
+}
+.edit-button-confirm{
+    width:40px ;
+    height: 20px;
+    color: white;
+    font-size:10px;
+    font-family: "Microsoft Yahei", sans-serif;
+    text-align: center;
+    background: #2985F7;
+    border: 1px solid black;
+    border-radius: 5px;
+    line-height: 20px;
+    cursor: pointer;
+}
+
+.edit-button-cancel{
+    width:40px ;
+    height: 20px;
+    color: black;
+    font-size:10px;
+    font-family: "Microsoft Yahei", sans-serif;
+    text-align: center;
+    background: #EFEFEF;
+    border: 1px solid black;
+    border-radius: 5px;
+    line-height: 20px;
+    cursor: pointer;
+}
+
+.my-table-select>.el-input>.el-input__inner{
+    width: 130px;
+    height: 32px;
+}
+.el-select-dropdown {
+    min-width: 130px !important;
+}
+.my-table-option{
+    width: 130px;
+}
+.my-dialog>.el-dialog>.el-dialog__body{
+    padding-top: 0px;
+
+}
+.my-dialog-layout{
+    height:542px ;
+    width: 460px;
+    margin-right: 20px;
+    margin-left:20px ;
+    display: flex;
+    flex-direction:column;
+    justify-content: flex-start;
+    align-items:center;
+}
+.my-dialog-title{
+    color: #2D2F33;
+    font-size:25px;
+    font-family: "Microsoft Yahei", sans-serif;
+    text-align: center;
+    font-weight: bold
+}
+.my-dialog-item{
+    width: 460px;
+    height: 50px !important;
+    padding-top: 16px;
+    padding-bottom: 16px;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items:center;
+}
+.my-dialog-item-title{
+    width: 150px;
+    height: 32px;
+    color: #8F9092;
+    font-size:18px;
+    font-family: "Microsoft Yahei", sans-serif;
+    line-height:32px;
+}
+.my-dialog-item-input>.el-form-item>.el-form-item__content>.el-select>.el-input{
+    width: 282px;
+
+}
+.my-dialog-layout>.el-form{
+    height: 500px;
+}
+.my-dialog-item-input{
+    width: 282px;
+    height: 40px;
+}
+.my-dialog-item-input>.el-select>.el-input>.el-input__inner{
+    width: 282px;
+    height: 32px;
+}
+.my-dialog-item-input>.el-form-item>.el-form-item__content>.el-input>.el-input__inner{
+    width: 282px;
+    height: 32px;
+}
+.my-dialog-item-input>.el-date-editor>.el-input__prefix>.el-input__icon{
+    line-height: 0px;
+}
+.my-dialog-foot-area{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items:center;
+    margin-right: 40px;
+    cursor:pointer
+
+}
+.my-dialog-foot{
+    width: 78px;
+    height: 30px;
+    color: #F0F2F5;
+    background: #2985F7;
+    font-size:18px;
+    margin-left: 10px;
+    margin-right: 10px;
+    text-align: center;
+    line-height: 30px;
+    border-radius: 3px;
+}
+.login-out-area{
+    font-size:15px;
+    color: #828282;
+    background: white;
+    position: fixed;
+    right: 50px;
+    top: 60px;
+    width: 120px;
+    text-align: center;
+    height: 30px;
+    line-height: 30px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.my-dialog-item-input>.el-form-item>.el-form-item__content>.el-select>.el-input>.el-input__inner{
+ width: 282px;
+ height: 32px;
+}
+
+.my-dialog-item-input>.el-form-item>.el-form-item__content>.el-select>.el-input>.el-input__suffix>.el-input__suffix-inner>.el-input__icon{
+    line-height: 0px;
+}
+
+.my-table-select>.el-input{
+    width: 100%;
+}
+.my-table-select>.el-input>.el-input__suffix>.el-input__suffix-inner>.el-input__icon{
+    line-height: 0px;
+}
+
+.page-button>.el-pagination>.el-pager>.active{
+    background-color: #2985F7 !important;
+}
+.page-button>.el-pagination>.el-pager>.number{
+    background: white ;
+    border: 1px solid #CFD6E4;
+}
+
+
+
+
+
+
+
+
+.my-editUser-dialog-layout{
+    height: 350px;
+    width: 1000px;
+    display: flex;
+    flex-direction:column;
+    justify-content: space-between;
+    align-items:center
+}
+.my-editUser-dialog>.el-dialog>.el-dialog__header{
+    background: #F4F7FD;
+    padding:0px 0px 0px
+}
+
+.my-editUser-dialog>.el-dialog>.el-dialog__body{
+    padding:0px 0px 0px 0px;
+    width: 1000px;
+}
+.my-editUser-dialog-head{
+    padding-left: 30px;
+    height:48px ;
+    background:#F4F7FD ;
+    width: 970px;
+    font-family: Mierosof YaHel;
+    color: #2D2F33;
+    line-height: 48px;
+    font-size: 18px;
+    font-weight:bolder
+}
+.my-editUser-dialog-foot{
+    height: 54px;
+    width: 100%;
+    background: white;
+    border-top: 1px solid #DFE4ED;
+    box-shadow: 0 0 3px #DFE4ED;
+    display: flex;
+    flex-direction: row;
+    justify-content: end;
+    align-items: center;
+}
+.register-cancel{
+    height: 32px;
+    width: 62px;
+    border: 1px solid #CFD6E4;
+    line-height: 32px;
+    text-align: center;
+    border-radius: 3px;
+    margin-right: 3px;
+    cursor:pointer;
+}
+
+.register-confirm{
+    height: 32px;
+    width: 62px;
+    border: 1px solid #2985F7;
+    line-height: 32px;
+    text-align: center;
+    color: white;
+    background:#2985F7 ;
+    border-radius: 3px;
+    margin-right: 3px;
+    cursor:pointer;
+}
+.my-editUser-dialog-body{
+    height: 100%;
+    width: 100%;
+}
+.my-editUser-dialog-body-title{
+    margin-top: 15px;
+    height: 30px;
+    width: 300px;
+    display: flex;
+    flex-direction: row;
+    justify-content: start;
+    align-items: center;
+}
+.my-editUser-dialog-body-title-name{
+    height: 30px;
+    width: 80px;
+    color: #2D2F33;
+    font-size: 18px;
+    font-weight:bolder;
+    margin-left: 10px;
+    line-height: 30px;
+
+}
+.my-editUser-dialog-body-title-info{
+    color: #A2AABB;
+    font-size: 18px;
+    height: 30px;
+    width: 200px;
+    margin-left: 10px;
+    line-height: 30px;
+}
+.my-editUser-dialog-body-content{
+    height: 50px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+.my-editUser-dialog-body-content-item {
+    width: 400px;
+    height: 50px;
+    display: flex;
+    flex-direction: row;
+    justify-content: start;
+    align-items: center;
+    margin-right: 60px;
+    margin-left: 10px;
+}
+.my-editUser-dialog-body-content-item-name{
+    width: 90px;
+    height: 32px ;
+    color: #73777D;
+    line-height: 32px;
+}
+.my-user-input>.el-input__inner{
+    width: 286px;
+    height: 32px;
+}
+.my-editUser-dialog-body-content-item>.el-form-item{
+    margin-bottom:0px
+}
+.required{
+    color: #FF0000;
+}
+.my-editUser-dialog-body-content-item>.el-form-item{
+    width: 70px;
+}

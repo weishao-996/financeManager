@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>经费管理系统</title>
+    <link rel="shortcut icon" href="./favicon.ico">
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="./plugins/element-ui/index.css" />
+    <link rel="stylesheet" href="./styles/index.css">
+    <link rel="stylesheet" href="./styles/userTable.css">
+    <link rel="stylesheet" href="./styles/history.css">
+    <style>
+    </style>
+</head>
+
+<body>
+<div class="index" id="conditionList-app">
+    <div class="menu">
+        <div class="menu-left">
+            <div class="title">经费管理系统</div>
+            <div class="menu-item-list">
+                <div :class="menuIndex==='1'?'menu-item-active':'menu-item-inactive'" @click="changeMenu('1')">收支情况</div>
+                <div :class="menuIndex==='2'?'menu-item-active':'menu-item-inactive'" @click="changeMenu('2')">收支历史</div>
+                <div :class="menuIndex==='3'?'menu-item-active':'menu-item-inactive'" @click="changeMenu('3')">收支比对</div>
+            </div>
+        </div>
+
+        <div class="menu-right">
+            <div class="menu-userManage" >
+                <div @click="openUserDialog" v-show="loginUser.type==='1'">
+                    用户管理 |
+                </div>
+            </div>
+            <div class="el-icon-user-solid user-icon"></div>
+            <div class="menu-loginUser" @mouseenter="handleEnter" >{{loginUser.userName}}</div>
+            <div class="login-out-area" v-if="logout==true" @mouseleave="handleLeave" @click="openLogout">退出/注销</div>
+        </div>
+    </div>
+    <div class="main">
+        <div v-show="menuIndex==='1'" class="condition-show">
+            <div class="search-area">
+                <div class="search-input-area">
+                    <el-input class="my-input" v-model="search.input" placeholder="请输入报销人或事由"></el-input>
+                    <el-date-picker
+                            v-model="search.searchTime"
+                            type="daterange"
+                            class="my-date-picker"
+                            range-separator="-"
+                            value-format="yyyy-MM-dd HH:mm:ss"
+                            start-placeholder="开始日期"
+                            end-placeholder="结束日期">
+                    </el-date-picker>
+                    <div class="search-button" @click="conditionSearch" > 查询</div>
+                </div>
+                <div class="search-button-area">
+                    <div class="search-button" v-if="loginUser.type==='1'"   style="width: 100px" @click="openDialog">
+                         添加数据
+                    </div>
+                </div>
+            </div>
+            <div class="table-area">
+                <el-table
+                        v-loading="loading"
+                        :header-cell-style="{background:'#F4F7FD',height:'50px',color:'#878DA5'}"
+                        class="table-head"
+                        :key="certInfoKey"
+                        :data="tableData"
+                        style="width: 100%"
+                        stripe
+                        @sort-change="financeSortChange"
+                >
+                    <el-table-column
+                            prop="claimerUserName"
+                            label="报销人"
+                            sortable="custom"
+                            width="140">
+                        <template slot-scope="scope">
+                            <span v-if="scope.row.editStatus == false">{{ scope.row.claimerUserName }}</span>
+                            <el-select   class="my-table-select" v-else v-model="scope.row.claimerUserId" placeholder="请选择">
+                                <el-option
+                                        class="my-table-option"
+                                        v-for="item in users"
+                                        :key="item.value"
+                                        :label="item.label"
+                                        :value="item.value">
+                                </el-option>
+                            </el-select>
+                        </template>
+                    </el-table-column>
+                    <el-table-column
+                            prop="reason"
+                            label="事由"
+                            width="140">
+                            <template slot-scope="scope">
+                                <span v-if="scope.row.editStatus == false">{{ scope.row.reason }}</span>
+                                <el-input class="my-table-input" v-else v-model="scope.row.reason"></el-input>
+                            </template>
+                    </el-table-column>
+                    <el-table-column
+                            prop="reasonTime"
+                            label="收入支出时间"
+                            width="140">
+                            <template slot-scope="scope">
+                                <span v-if="scope.row.editStatus == false">{{ scope.row.reasonTime }}</span>
+                                <el-date-picker
+                                        class="my-table-date-input"
+                                        v-else
+                                        v-model="scope.row.reasonTime"
+                                        type="date"
+                                        value-format="yyyy-MM-dd HH:mm:ss"
+                                        placeholder="选择日期">
+                                </el-date-picker>
+                            </template>
+                    </el-table-column>
+                    <el-table-column
+                            prop="sum"
+                            label="支出金额"
+                            width="140">
+                            <template slot-scope="scope">
+                                <span v-if="scope.row.editStatus == false">{{ scope.row.sum }}</span>
+                                <el-input class="my-table-input" v-else v-model="scope.row.sum"></el-input>
+                            </template>
+                    </el-table-column>
+                    <el-table-column
+                            label="类型"
+                            width="140">
+                            <template slot-scope="scope">
+                                <span v-if="scope.row.editStatus == false">{{ scope.row.typeStr }}</span>
+                                <el-select   class="my-table-select" v-else v-model="scope.row.type" placeholder="请选择">
+                                    <el-option
+                                            class="my-table-option"
+                                            v-for="item in types"
+                                            :key="item.value"
+                                            :label="item.label"
+                                            :value="item.value">
+                                    </el-option>
+                                </el-select>
+                            </template>
+                    </el-table-column>
+                    <el-table-column
+                            prop="balance"
+                            label="剩余金额"
+                            width="140">
+                            <template slot-scope="scope">
+                                <span >{{ scope.row.balance }}</span>
+                            </template>
+                    </el-table-column>
+                    <el-table-column
+                            prop="recorderUserName"
+                            label="记录人"
+                            width="100">
+                            <template slot-scope="scope">
+                                <span >{{ scope.row.recorderUserName }}</span>
+                            </template>
+                    </el-table-column>
+                    <el-table-column
+                            prop="updateTime"
+                            label="报销时间"
+                            sortable="custom"
+                            width="165">
+                            <template slot-scope="scope">
+                                <span v-if="scope.row.editStatus == false">{{ scope.row.updateTime }}</span>
+                                <el-date-picker
+                                        class="my-table-date-input"
+                                        v-else
+                                        v-model="scope.row.updateTime"
+                                        type="date"
+                                        value-format="yyyy-MM-dd HH:mm:ss"
+                                        placeholder="选择日期">
+                                </el-date-picker>
+                            </template>
+                    </el-table-column>
+                    <el-table-column
+                            fixed="right"
+                            label="操作"
+                            width="140">
+                        <template slot-scope="scope">
+                            <el-button
+                                    class="user-table-button"
+                                    v-if="scope.row.editStatus == false&&loginUser.type==='1'"
+                                    @click.native.prevent="editRow(scope.$index)"
+                                    type="text"
+                                    size="small">
+                                编辑
+                            </el-button>
+                            <el-button
+                                    class="user-table-button"
+                                    v-if="scope.row.editStatus == false&&loginUser.type==='1'"
+                                    @click.native.prevent="deleteRecord(scope.$index)"
+                                    type="text"
+                                    size="small">
+                                删除
+                            </el-button>
+                            <div class="edit-button-area" v-if="scope.row.editStatus == true">
+                                <div class="edit-button-confirm" @click="updateRecord(scope.$index)">确定</div>
+                                <div class="edit-button-cancel" @click="editCancel(scope.$index)">取消</div>
+                            </div>
+                        </template>
+                    </el-table-column>
+                </el-table>
+            </div>
+            <div class="page-area">
+                <div class="page-record">
+                    <div class="page-record-number">
+                        共{{page.total}}条记录，兰前显示第{{(page.currentPage-1)*page.pageSize+1}}-{{(page.currentPage-1)*page.pageSize+tableData.length}}条
+                    </div>
+                    <div class="page-record-select">
+                        <el-select  @change="changePageSize" v-model="page.pageSize" class="my-select" placeholder="请选择" style="width:50px">
+                            <el-option
+                                    v-for="item in options"
+                                    :key="item.value"
+                                    :label="item.label"
+                                    :value="item.value">
+                            </el-option>
+                        </el-select>
+                    </div>
+                </div>
+                <div class="page-button">
+                    <el-pagination
+                            background
+                            layout="prev, pager, next"
+                            :page-count="page.pageCount"
+                            @prev-click="handlePrevClick"
+                            @next-click="handleNextClick"
+                            @current-change="handlePageClick"
+                    >
+                    </el-pagination>
+                </div>
+            </div>
+            <div></div>
+        </div>
+        <div v-show="menuIndex==='2'" class="history-show">
+            <div ref="chartHistory"  style="width: 1200px; height: 800px "></div>
+        </div>
+        <div v-show="menuIndex==='3'" class="history-show">
+            <div ref="chartCompare"  style="width: 1200px; height: 800px "></div>
+        </div>
+    </div>
+    <el-dialog
+            class="my-dialog"
+            :visible.sync="dialogVisible"
+            width="500px"
+            :before-close="handleClose">
+        <div class="my-dialog-title">添加新数据</div>
+        <div class="my-dialog-layout">
+            <el-form ref="addRecord" :model="addRecord" :rules="addRecordRules"  >
+                <div class="my-dialog-item">
+                    <div class="my-dialog-item-title">报销人</div>
+                    <div class="my-dialog-item-input">
+                        <el-form-item  prop="claimerUserId">
+                            <el-select v-model="addRecord.claimerUserId" filterable placeholder="请选择">
+                                <el-option
+                                        v-for="item in users"
+                                        :key="item.value"
+                                        :label="item.label"
+                                        :value="item.value">
+                                </el-option>
+                            </el-select>
+                        </el-form-item>
+                    </div>
+                </div>
+                <div class="my-dialog-item">
+                    <div class="my-dialog-item-title">报销事由</div>
+                    <div class="my-dialog-item-input">
+                        <el-form-item  prop="reason">
+                            <el-input v-model="addRecord.reason" placeholder="请输入内容"></el-input>
+                        </el-form-item>
+                    </div>
+                </div>
+                <div class="my-dialog-item">
+                    <div class="my-dialog-item-title">收入/支出时间</div>
+                    <div class="my-dialog-item-input">
+                        <el-form-item  prop="reasonTime">
+                            <el-date-picker
+                                    v-model="addRecord.reasonTime"
+                                    type="date"
+                                    value-format="yyyy-MM-dd HH:mm:ss"
+                                    placeholder="选择日期">
+                            </el-date-picker>
+                        </el-form-item>
+                    </div>
+                </div>
+                <div class="my-dialog-item">
+                    <div class="my-dialog-item-title">收支金额</div>
+                    <div class="my-dialog-item-input">
+                        <el-form-item  prop="sum">
+                            <el-input v-model="addRecord.sum" placeholder="请输入内容"></el-input>
+                        </el-form-item>
+                    </div>
+                </div>
+                <div class="my-dialog-item">
+                    <div class="my-dialog-item-title">报销类型</div>
+                    <div class="my-dialog-item-input">
+                        <el-form-item  prop="type">
+                            <el-select v-model="addRecord.type" placeholder="请选择">
+                                <el-option
+                                        v-for="item in types"
+                                        :key="item.value"
+                                        :label="item.label"
+                                        :value="item.value">
+                                </el-option>
+                            </el-select>
+                        </el-form-item>
+                    </div>
+                </div>
+                <div class="my-dialog-item">
+                    <div class="my-dialog-item-title">报销日期</div>
+                    <div class="my-dialog-item-input">
+                        <el-form-item  prop="updateTime">
+                            <el-date-picker
+                                    v-model="addRecord.updateTime"
+                                    type="date"
+                                    value-format="yyyy-MM-dd HH:mm:ss"
+                                    placeholder="选择日期">
+                            </el-date-picker>
+                        </el-form-item>
+                    </div>
+                </div>
+            </el-form>
+            <div class="my-dialog-foot-area">
+                <div class="my-dialog-foot" @click="submitInsertForm('addRecord')">确认</div>
+                <div class="my-dialog-foot" @click="handleClose">取消</div>
+            </div>
+
+        </div>
+    </el-dialog>
+    <el-dialog
+            class="my-user-dialog"
+            :visible.sync="userDialogVisible"
+            width="850px"
+            :before-close="handleClose">
+        <div class="my-userTable-layout" v-loading="loading">
+            <div class="button-area">
+                <div class="userTable-button" @click="download">导出用户信息</div>
+            </div>
+            <div class="userTable-area">
+                <el-table
+                        :header-cell-style="{background:'#F4F7FD',height:'50px',color:'#878DA5'}"
+                        class="table-head"
+                        :data="userTableData"
+                        style="width: 100%"
+                        stripe
+                        :default-sort = "{prop: 'date', order: 'descending'}"
+                >
+                    <el-table-column
+                            prop="userName"
+                            label="姓名"
+                            sortable
+                            width="150">
+                    </el-table-column>
+                    <el-table-column
+                            prop="loginName"
+                            label="用户名"
+                            sortable
+                            width="150">
+                    </el-table-column>
+                    <el-table-column
+                            prop="idNo"
+                            label="身份证号"
+                            sortable
+                            width="160">
+                    </el-table-column>
+                    <el-table-column
+                            prop="phoneNo"
+                            label="手机号"
+                            sortable
+                            width="150">
+                    </el-table-column>
+                    <el-table-column
+                            fixed="right"
+                            label="操作"
+                            width="140">
+                        <template slot-scope="scope">
+                            <el-button
+                                    @click.native.prevent="editUserRow(scope.row)"
+                                    type="text"
+                                    size="small">
+                                编辑
+                            </el-button>
+                            <el-button
+                                    @click.native.prevent="deleteUserRow(scope.row)"
+                                    type="text"
+                                    size="small">
+                                删除
+                            </el-button>
+                            <div class="edit-button-area" v-if="scope.row.editStatus == true">
+                                <div class="edit-button-confirm">确定</div>
+                                <div class="edit-button-cancel" @click="editCancel(scope.$index)">取消</div>
+                            </div>
+                        </template>
+                    </el-table-column>
+                </el-table>
+            </div>
+            <div class="userPage-area">
+                <div class="page-record">
+                    <div class="page-record-number">
+                        共{{userPage.total}}条记录，兰前显示第{{(userPage.currentPage-1)*userPage.pageSize+1}}-{{(userPage.currentPage-1)*userPage.pageSize+userTableData.length}}条
+                    </div>
+                </div>
+                <div class="page-button">
+                    <el-pagination
+                            background
+                            layout="prev, pager, next"
+                            @prev-click="userHandlePrevClick"
+                            @next-click="userHandleNextClick"
+                            @current-change="userHandlePageClick"
+                            :page-count=userPage.pageCount>
+                    </el-pagination>
+                </div>
+            </div>
+        </div>
+    </el-dialog>
+    <el-dialog
+            class="my-editUser-dialog"
+            :visible.sync="userEditDialogVisible"
+            width="1000px"
+            :before-close="handleUserEditClose">
+        <div class="my-editUser-dialog-layout" v-loading="loading">
+            <div class="my-editUser-dialog-head">用户修改</div>
+            <div class="my-editUser-dialog-body">
+                <div class="my-editUser-dialog-body-title">
+                    <div class="my-editUser-dialog-body-title-name">基本信息</div>
+                    <div class="my-editUser-dialog-body-title-info el-icon-question">默认密码（000000）</div>
+                </div>
+                <el-form ref="registerForm" :model="registerForm" :rules="registerRules"  >
+                    <div class="my-editUser-dialog-body-content">
+                        <div class="my-editUser-dialog-body-content-item">
+                            <div class="required">*</div>
+                            <div class="my-editUser-dialog-body-content-item-name">用户名</div>
+                            <el-form-item  prop="loginName">
+                                <el-input class="my-user-input"  v-model="registerForm.loginName"  placeholder="请输入内容"></el-input>
+                            </el-form-item>
+                        </div>
+                        <div class="my-editUser-dialog-body-content-item">
+                            <div class="required">*</div>
+                            <div class="my-editUser-dialog-body-content-item-name">姓名</div>
+                            <el-form-item prop="userName">
+                                <el-input class="my-user-input" v-model="registerForm.userName" placeholder="请输入内容"></el-input>
+                            </el-form-item>
+                        </div>
+                    </div>
+                    <div class="my-editUser-dialog-body-content">
+                        <div class="my-editUser-dialog-body-content-item">
+                            <div class="required">*</div>
+                            <div class="my-editUser-dialog-body-content-item-name">密码</div>
+                            <el-form-item  prop="password">
+                                <el-input type="password" class="my-user-input"  v-model="registerForm.password"  placeholder="请输入内容"></el-input>
+                            </el-form-item>
+                        </div>
+                        <div class="my-editUser-dialog-body-content-item">
+                            <div class="required">*</div>
+                            <div class="my-editUser-dialog-body-content-item-name">确认密码</div>
+                            <el-form-item prop="passwordConfirm">
+                                <el-input  type="password" class="my-user-input" v-model="registerForm.passwordConfirm" placeholder="请输入内容"></el-input>
+                            </el-form-item>
+                        </div>
+                    </div>
+                    <div class="my-editUser-dialog-body-content">
+                        <div class="my-editUser-dialog-body-content-item">
+                            <div class="required">*</div>
+                            <div class="my-editUser-dialog-body-content-item-name">手机号</div>
+                            <el-form-item prop="phoneNo">
+                                <el-input class="my-user-input" v-model="registerForm.phoneNo" placeholder="请输入内容"></el-input>
+                            </el-form-item>
+                        </div>
+                        <div class="my-editUser-dialog-body-content-item">
+                            <div class="my-editUser-dialog-body-content-item-name">身份证</div>
+                            <el-form-item prop="idNo">
+                                <el-input class="my-user-input" v-model="registerForm.idNo" placeholder="请输入内容"></el-input>
+                            </el-form-item>
+                        </div>
+                    </div>
+                </el-form>
+            </div>
+            <div class="my-editUser-dialog-foot">
+                <div class="register-cancel" @click="cancelEdit" >取消</div>
+                <div class="register-confirm" @click="submitForm('registerForm')">确认</div>
+            </div>
+        </div>
+    </el-dialog>
+</div>
+
+<!-- 开发环境版本，包含了有帮助的命令行警告 -->
+<script src="./plugins/vue/vue.js"></script>
+<!-- 引入组件库 -->
+<script src="./plugins/element-ui/index.js"></script>
+<!-- 引入axios -->
+<script src="./plugins/axios/axios.min.js"></script>
+<script src="./js/request.js"></script>
+<script src="./js/utils.js"></script>
+<script src="./api/login.js"></script>
+<script src="./js/echarts.min.js"></script>
+<script src="./js/lodash.min.js"></script>
+<script src="./api/finance.js"></script>
+<script src="./api/user.js"></script>
+
+
+<script>
+    new Vue(
+        {
+        el: '#conditionList-app',
+        data() {
+            // 验证手机号的规则
+            var checkMobile = (rules,value,cb) => {
+                const regMobile = /^1(3[0-9]|4[01456879]|5[0-35-9]|6[2567]|7[0-8]|8[0-9]|9[0-35-9])\d{8}$/
+                if(regMobile.test(value)){
+                    return cb()
+                }
+                cb(new Error('请输入合法的手机号'))
+            }
+            var isCardId = (rule, value, callback) => {
+                if (!value) {
+                    return new Error("请输入身份证号)");
+                } else {
+                    const reg = /^\d{6}(18|19|20)?\d{2}(0[1-9]|1[0-2])(([0-2][1-9])|10|20|30|31)\d{3}(\d|X|x)$/;
+                    const card = reg.test(value);
+                    if (!card) {
+                        //判断座机为12位
+                        callback(new Error("身份证格式如:423024xxxx0216xxxx"));
+                    } else {
+                        callback();
+                    }
+                }
+            };
+            var passConfirm = (rule, value, callback) => {
+                if (this.registerForm.password!==''){
+                    if (value === '') {
+                        callback(new Error('请再次输入密码'));
+                    } else if (value !== this.registerForm.password) {
+                        callback(new Error('两次输入密码不一致!'));
+                    } else {
+                        callback();
+                    }
+                }else{
+                    callback();
+                }
+            };
+            const twoPoint = (rule, value, callback) => {
+                if(/^\d+\.?\d{0,2}$/.test(value)){
+                    if(value.indexOf('.')=='-1'&&value.length>1&&value.slice(0,1)=='0'){
+                        callback(new Error("最多包含两位小数的正数且不能为以0开头的正整数"));
+                    }else{
+                        callback();
+                    }
+                }else{
+                    callback(new Error("最多包含两位小数的正数且不能为以0开头的正整数"));
+                }
+            }
+            return {
+                certInfoKey:false,
+                loading:false,
+                chartHistory:{},
+                chartCompare:{},
+                menuIndex:'1',
+                logout:false,
+                dialogVisible: false,
+                userDialogVisible:false,
+                userEditDialogVisible:false,
+                search:{
+                    input: '',
+                    searchTime:null,
+                    claimerUserNameOrder:null,
+                    updateTimeOrder:null
+
+                },
+                //当前登录用户信息
+                loginUser:{
+                    userName:"",
+                    type:""
+                },
+                //编辑字段
+                editRecord:{
+                    claimerUserName: '',
+                    reason:"",
+                    reasonTime:"",
+                    sum:"",
+                    type:"",
+                    balance:"",
+                    recorderUserName:"",
+                    createTime:"",
+                },
+                //新增字段
+                addRecord:{
+                    claimerUserId:"",
+                    reason:"",
+                    reasonTime:"",
+                    type:"",
+                    sum:"",
+                    updateTime:"",
+                },
+                //列表页数据
+                tableData: [],
+                tableDataCache:[],
+                //页码数据
+                page:{
+                    pageSize:10,
+                    total:20,
+                    currentPage:1,
+                    pageCount:50
+                },
+                userPage:{
+                    pageSize:10,
+                    total:20,
+                    currentPage:1,
+                    pageCount:50
+                },
+                //每页显示条数设置
+                options:[
+                    {label:"5条/页",value:5} ,
+                    {label:"10条/页",value:10} ,
+                    {label:"15条/页",value:15} ,
+                    {label:"20条/页",value:20} ,
+                ],
+                //类型字典
+                types:[
+                    {label:"收入",value:2} ,
+                    {label:"支出",value:1}
+                ],
+                //人员选择列表
+                users:[],
+                //用户列表
+                userTableData:[],
+                //收支历史设置
+                 historyOption : {
+                    title: {
+                        text: '收支历史情况',
+                        left: 'center' // 设置标题居中对齐
+                    },
+                    xAxis: {
+                        boundaryGap: false,
+                        name: '报销日期',
+                        type: 'category',
+                        data: ['2022-01-01', '2022-01-02', '2022-01-03', '2022-01-04', '2022-01-05', '2022-01-06', '2022-01-07','2022-01-08','2022-01-09','2022-01-10','2022-01-11']
+                    },
+                    yAxis: {
+                        type: 'value',
+                        name: '剩余总量',
+                        // 整条y轴
+                        axisLine:{
+                            show:true
+                        },
+                        // y轴上的小横线
+                        axisTick:{
+                            show:true
+                        },
+                        splitNumber: 7,
+                    },
+                    series: [{
+                        name: '剩余总额',
+                        type: 'line',
+                        data: ["-800",8000,6000,7000,5000,10000,3000,12000,8000,4000,6000],
+                        lineStyle: {
+                            color: "#E19C9A" // 设置折线颜色为红色
+                        },
+                        itemStyle: {
+                            color: "#E19C9A" // 设置拐点小圆点颜色为红色
+                        },
+                    }],
+                    dataZoom: [
+                        {
+                            selectedDataBackground: {
+                                areaStyle: {
+                                    color: "rgba(207, 216, 225, 0.9)",
+                                    opacity: 1
+                                }
+                            },
+                            fillerColor: "rgba(204, 211, 225, 0.7)",
+                        }
+                    ],
+
+                    toolbox: { //可视化的工具箱
+                        show: true,
+                        feature: {
+                            dataZoom: { //数据缩放视图
+                                show: true,
+                                xAxisIndex:[0,3],
+                                yAxisIndex: false,
+                                onclick: function (payload){
+                                    console.log("当前滚动条范围：",payload.start,payload.end)
+                                }
+                            },
+                            restore: { //重置
+                                show: true
+                            },
+                            saveAsImage: {//保存图片
+                                show: true
+                            },
+                        }
+                    },
+                    tooltip: { //弹窗组件
+                        show: true
+                    },
+
+                },
+                //收支比对设置
+                 compareOption : {
+                    title: {
+                        text: '收支对比情况',
+                        left: 'center'
+                    },
+                    tooltip: {
+                        trigger: 'item',
+                        show: true
+                    },
+                    legend: {
+                        orient: 'vertical',
+                        left: 'left',
+                        data: ['收入', '支出']
+                    },
+                    xAxis: {
+                        show: false,
+                        type: 'category',
+                        data: ["2014-07-14", "2014-07-15", "2014-07-16", "2014-07-17", "2014-07-18", "2014-07-19", "2014-07-20", "2014-07-21", "2014-07-22", "2014-07-23", "2014-07-24", "2014-07-25", "2014-07-26", "2014-07-27", "2014-07-28", "2014-07-29", "2014-07-30", "2014-07-31", "2014-08-01", "2014-08-02", "2014-08-03", "2014-08-05", "2014-08-06", "2014-08-07", "2014-08-08", "2014-08-09", "2014-08-10", "2014-08-11", "2014-08-12", "2014-08-13", "2014-08-14", "2014-08-15", "2014-08-16", "2014-08-17", "2014-08-18", "2014-08-19", "2014-08-20", "2014-08-21", "2014-08-22", "2014-08-23", "2014-08-24", "2014-08-25", "2014-08-26", "2014-08-27", "2014-08-28", "2014-08-29", "2014-08-30", "2014-08-31", "2014-09-01", "2014-09-03", "2014-09-04", "2014-09-05", "2014-09-06", "2014-09-07", "2014-09-08", "2014-09-09", "2014-09-10", "2014-09-11", "2014-09-12", "2014-09-13", "2014-09-14", "2014-09-15", "2014-09-16", "2014-09-17", "2014-09-18", "2014-09-19", "2014-09-20", "2014-09-21", "2014-09-22", "2014-09-23", "2014-09-24", "2014-09-25", "2014-09-26", "2014-09-27", "2014-09-28", "2014-09-29", "2014-09-30", "2014-10-01", "2014-10-02", "2014-10-03", "2014-10-04", "2014-10-05", "2014-10-06", "2014-10-07", "2014-10-08", "2014-10-09", "2014-10-10", "2014-10-11", "2014-10-14", "2014-10-15", "2014-10-16", "2014-10-17", "2014-10-18", "2014-10-19", "2014-10-20", "2014-10-21", "2014-10-22", "2014-10-23", "2014-10-24", "2014-10-25", "2014-10-26", "2014-10-27", "2014-10-28", "2014-10-29", "2014-10-30", "2014-10-31", "2014-11-01", "2014-11-03", "2014-11-04", "2014-11-05", "2014-11-07", "2014-11-08", "2014-11-09", "2014-11-10", "2014-11-11", "2014-11-13", "2014-11-14", "2014-11-15", "2014-11-16", "2014-11-17", "2014-11-18", "2014-11-19", "2014-11-23", "2014-11-24", "2014-11-25", "2014-11-26", "2014-11-27", "2014-11-28", "2014-11-29", "2014-12-01", "2014-12-02", "2014-12-03", "2014-12-05", "2014-12-06", "2014-12-07", "2014-12-08", "2014-12-09", "2014-12-10", "2014-12-11", "2014-12-13", "2014-12-14", "2014-12-15", "2014-12-17", "2014-12-19", "2014-12-22", "2014-12-23", "2014-12-25", "2014-12-26", "2014-12-27", "2014-12-28", "2014-12-29", "2014-12-30", "2015-01-01", "2015-01-02", "2015-01-03", "2015-01-04", "2015-01-05", "2015-01-06", "2015-01-07", "2015-01-08", "2015-01-09", "2015-01-10", "2015-01-11", "2015-01-12", "2015-01-13", "2015-01-14", "2015-01-15", "2015-01-16", "2015-01-17", "2015-01-18", "2015-01-19", "2015-01-20", "2015-01-22", "2015-01-23", "2015-01-24", "2015-01-25", "2015-01-26", "2015-01-28", "2015-01-29", "2015-01-31", "2015-02-01", "2015-02-02", "2015-02-03", "2015-02-05", "2015-02-06", "2015-02-09", "2015-02-10", "2015-02-11", "2015-02-12", "2015-02-13", "2015-02-14", "2015-02-15", "2015-02-16", "2015-02-18", "2015-02-19", "2015-02-20", "2015-02-21", "2015-02-22", "2015-02-23", "2015-02-24"]
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+                    dataZoom: [
+                        {
+                            type: 'slider',
+                            selectedDataBackground: {
+                                areaStyle: {
+                                    color: "rgba(207, 216, 225, 0.9)",
+                                    opacity: 1
+                                }
+                            },
+                            fillerColor: "rgba(204, 211, 225, 0.7)",
+                        }
+                    ],
+                    toolbox: { //可视化的工具箱
+                        show: true,
+                        feature: {
+                            restore: { //重置
+                                show: true
+                            },
+                            saveAsImage: {//保存图片
+                                show: true
+                            },
+                            dataZoom: {
+                                title: '区域缩放',
+                                yAxisIndex: false,
+                                onclick: function(payload) {
+                                    console.log('dataZoom 事件 payload:', payload);
+                                    console.log('当前滚动条范围：', payload.zoom[0].start, payload.zoom[0].end);
+                                }
+                            }
+                        }
+                    },
+                    series: [
+                        {
+                            name: '收支对比',
+                            type: 'pie',
+                            radius: '40%',
+                            data: [
+                                { value: 1048, name: '收入' },
+                                { value: 735, name: '支出' },
+                            ],
+                            color:  ['#2F4554', '#C23531'],
+                            emphasis: {
+                                itemStyle: {
+                                    shadowBlur: 10,
+                                    shadowOffsetX: 0,
+                                    shadowColor: 'rgba(0, 0, 0, 0.5)'
+                                }
+                            },
+                        }
+                    ]
+                },
+                //新增记录表单验证规则
+                addRecordRules:{
+                    claimerUserId:[
+                        { required: true, message: '请选择报销人', trigger: 'change' },
+                    ],
+                    reason:[
+                        { required: true, message: '请输入报销事由', trigger: 'blur' },
+                    ],
+                    reasonTime: [
+                        { required: true, message: '请输入报销时间', trigger: 'change' },
+                    ],
+                    sum:[
+                        { required: true, message: '请输入收支金额', trigger: 'blur' },
+                        { validator: twoPoint, trigger: 'blur'}
+                    ],
+                    type:[
+                        { required: true, message: '请选择报销类型', trigger: 'change' },
+                    ],
+                    updateTime:[
+                        { required: true, message: '请选择报销日期', trigger: 'change' },]
+                },
+
+                //注册表单
+                registerForm:{
+                    loginName:"",
+                    userName:"",
+                    password:"",
+                    passwordConfirm:"",
+                    phoneNo:"",
+                    idNo:"",
+                    op:""
+                },
+                //注册表单验证规则
+                registerRules:{
+                    loginName:[
+                        { required: true, message: '请输入用户名', trigger: 'blur' },
+                        { min: 3, max: 10, message: '长度在 3 到 10 个字符', trigger: 'blur' }
+                    ],
+                    userName:[
+                        { required: true, message: '请输入姓名', trigger: 'blur' },
+                        { min: 2, max: 5, message: '长度在 2 到 5 个字符', trigger: 'blur' }
+                    ],
+                    passwordConfirm: [
+                        {validator:passConfirm, trigger: 'blur'}
+                    ],
+                    phoneNo:[
+                        { required: true, message: '请输入合法的手机号', trigger: 'blur' },
+                        {validator: checkMobile, trigger: 'blur'}
+                    ],
+                    idNo:[{validator: isCardId, trigger: 'blur'}]
+                }
+
+
+
+
+            }
+        },
+        computed: {
+        },
+        mounted(){
+            this.buildHistory();
+            this.buildCompare();
+            this.getFinanceList();
+        },
+        created() {
+          this.loginUser.userName=localStorage.getItem("userName")
+          this.loginUser.type=localStorage.getItem("type")
+          this.initUserSelectList();
+        },
+        methods: {
+            //导出用户
+            async download() {
+                try {
+                    this.loading = true;
+                    const res = await downloadUser(); // 等待downloadUser()方法完成，并将结果保存在res变量中
+                    console.log(res);
+                    this.loading = false;
+                    let blob = new Blob([res], {type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+                    const link = document.createElement('a');
+                    link.download = "用户表";
+                    link.style.display = 'none';
+                    link.href = URL.createObjectURL(blob);
+                    document.body.appendChild(link);
+                    link.click();
+                    URL.revokeObjectURL(link.href);
+                    document.body.removeChild(link);
+                } catch (error) {
+                    console.error(error);
+                    this.loading = false;
+                }
+            },
+            //提交注册
+            async submitForm(formName) {
+                this.$refs[formName].validate(async (valid) => {
+                    if (valid) {
+                        this.loading = true;
+                        let res = await updateUser(this.registerForm)
+                        if (String(res.code) === '200'){
+                            this.loading = false;
+                            this.userEditDialogVisible=false
+                            this.getUserList();
+                            this.$message.success(res.msg)
+                        }else {
+                            this.loading = false;
+                            this.$message.error(res.msg)
+                        }
+                    } else {
+                        this.$message.warning("请完成表单信息！！")
+                    }
+                });
+            },
+             deepCopy(obj) {
+                if (obj === null || typeof obj !== 'object') {
+                    return obj;
+                }
+
+                let copy = Array.isArray(obj) ? [] : {};
+
+                for (let key in obj) {
+                    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                        copy[key] = this.deepCopy(obj[key]);
+                    }
+                }
+
+                return copy;
+            },
+            cancelEdit(){
+                this.userEditDialogVisible=false
+            },
+            //打开编辑用户界面
+            editUserRow(row){
+                this.registerForm=this.deepCopy(row)
+                this.registerForm.password=""
+                this.userEditDialogVisible=true
+            },
+            //取消注册
+            cancelRegister(){
+                this.$confirm('确认关闭？')
+                    .then(_ => {
+                        this.dialogVisible=false;
+                    })
+                    .catch(_ => {});
+            },
+            //用户删除
+            async deleteUserRow(row) {
+                this.registerForm = this.deepCopy(row)
+                deleteUser(this.registerForm)
+                    .then(response => {
+                    console.log(response)
+                    if (response.code===200) {
+                        this.$message.error(response.msg)
+                        this.getUserList(); // 根据当前页码重新获取数据
+                    } else {
+                        this.$message.error("删除失败！")
+                    }
+                })
+
+            },
+            //关闭注册页面
+            handleClose(done) {
+                this.$confirm('确认关闭？')
+                    .then(_ => {
+                        this.userDialogVisible=false
+                        this.dialogVisible=false
+                        this.$refs['addRecord'].resetFields();
+                        done();
+                    })
+                    .catch(_ => {});
+            },
+            //经费上一页
+            handlePrevClick() {
+                if (this.page.currentPage > 1) {
+                    this.page.currentPage--;
+                    this.getFinanceList(); // 根据当前页码重新获取数据
+                }
+            },
+            //经费下一页
+            handleNextClick() {
+                if (this.page.currentPage < this.page.pageCount) {
+                    this.page.currentPage++;
+                    this.getFinanceList(); // 根据当前页码重新获取数据
+                }
+            },
+            // 经费自定义页
+            handlePageClick(pageNumber) {
+                this.page.currentPage = pageNumber;
+                this.getFinanceList(); // 根据当前页码重新获取数据
+            },
+
+            //经费排序触发
+            financeSortChange(data){
+                console.log(data)
+                if (data.prop==="claimerUserName"){
+                    this.search.claimerUserNameOrder=data.order
+                    this.search.updateTimeOrder=null
+                    this.getFinanceList(); // 根据当前页码重新获取数据
+                }else if (data.prop==="updateTime"){
+                    this.search.updateTimeOrder=data.order
+                    this.search.claimerUserNameOrder=null
+                    this.getFinanceList(); // 根据当前页码重新获取数据
+                }
+            },
+            //用户上一页
+            userHandlePrevClick() {
+                if (this.userPage.currentPage > 1) {
+                    this.userPage.currentPage--;
+                    this.getUserList(); // 根据当前页码重新获取数据
+                }
+            },
+            //用户下一页
+            userHandleNextClick() {
+                console.log("3333")
+                if (this.userPage.currentPage < this.userPage.pageCount) {
+                    this.userPage.currentPage++;
+                    this.getUserList(); // 根据当前页码重新获取数据
+                }
+            },
+            //用户自定义页
+            userHandlePageClick(pageNumber) {
+                this.userPage.currentPage = pageNumber;
+                this.getUserList(); // 根据当前页码重新获取数据
+            },
+            //经费分页查询
+            getFinanceList(){
+                // 设置分页查询参数
+                const data = {
+                    currentPage: this.page.currentPage,
+                    pageSize: this.page.pageSize,
+                    // 其他查询条件参数
+                    claimerUserName:this.search.input,
+                    startTime:this.search.searchTime===null?null:this.search.searchTime[0],
+                    endTime:this.search.searchTime===null?null:this.search.searchTime[1],
+                    claimerUserNameOrder:this.search.claimerUserNameOrder,
+                    updateTimeOrder:this.search.updateTimeOrder
+                }
+                // 调用 financePage() 方法发送分页查询请求
+                console.log(data)
+                financePage(data)
+                    .then(response => {
+                        console.log(response)
+                        if (response.code===200) {
+                            // 更新分页数据
+                            response.data.record.forEach((item) => {
+                                item.editStatus = false;
+                            });
+                            this.tableData = response.data.record
+                            this.page.pageCount= response.data.pageCount
+                            this.page.total= response.data.total
+                        } else {
+                            this.$message.error(response.msg)
+                        }
+                    })
+                    .catch(error => {
+                        this.$message.error("服务器请求错误，请联系管理员！")
+                    })
+            },
+            //用户分页查询
+            getUserList(){
+                // 设置分页查询参数
+                const data = {
+                    currentPage: this.userPage.currentPage,
+                    pageSize: this.userPage.pageSize,
+                }
+                // 调用 financePage() 方法发送分页查询请求
+                console.log(data)
+                userPage(data)
+                    .then(response => {
+                        console.log(response)
+                        if (response.code===200) {
+                            // 更新分页数据
+                            response.data.record.forEach((item) => {
+                                item.editStatus = false;
+                            });
+                            this.userTableData = response.data.record
+                            this.userPage.pageCount= response.data.pageCount
+                            this.userPage.total= response.data.total
+                        } else {
+                            this.$message.error(response.msg)
+                        }
+                    })
+                    .catch(error => {
+                        this.$message.error("服务器请求错误，请联系管理员！")
+                    })
+            },
+            //初始化收支历史
+            buildHistory(){
+                history().then(res =>{
+                    console.log(res)
+                    this.historyOption.xAxis.data=res.data.dateList
+                    this.historyOption.series[0].data=res.data.balance
+                    this.chartHistory = echarts.init(this.$refs.chartHistory);
+                    this.chartHistory.setOption(this.historyOption);
+                })
+            },
+
+            //初始化收支比对
+            buildCompare(){
+                compare({
+                }).then(res =>{
+                    console.log(res)
+                    this.compareOption.xAxis.data=res.data.dateList
+                    this.compareOption.series[0].data=[ { value: res.data.income, name: '收入' },
+                                                        { value: res.data.expenses, name: '支出' },]
+                    this.chartCompare = echarts.init(this.$refs.chartCompare);
+                    this.chartCompare.setOption(this.compareOption);
+                    this.debouncedFunction = _.debounce(this.handleDataZoom, 500);
+                    this.chartCompare.on('dataZoom', this.debouncedFunction);
+                })
+
+            },
+            //滚动条更新方法
+            handleDataZoom(params) {
+                console.log(this.chartCompare.getModel().option)
+                const startValue = this.compareOption.xAxis.data[this.chartCompare.getModel().option.dataZoom[0].startValue];
+                const endValue = this.compareOption.xAxis.data[this.chartCompare.getModel().option.dataZoom[0].endValue];
+                // 执行相应的方法，例如更新数据等
+                console.log(startValue)
+                console.log(endValue)
+                compare({
+                    startTime:startValue+" 00:00:00",
+                    endTime:endValue+" 00:00:00"
+                }).then(res =>{
+                    console.log(res)
+                    this.compareOption.series[0].data=[
+                        { value: res.data.income, name: '收入' },
+                        { value: res.data.expenses, name: '支出' },]
+                    this.chartCompare.setOption(this.compareOption,false);
+                })
+            },
+            //页面切换
+            changeMenu(index){
+                this.menuIndex=index;
+
+            },
+            //打开人员管理弹窗
+            openUserDialog(){
+                this.userDialogVisible=true
+                this.getUserList()
+            },
+            //退出方法
+            async openLogout(){
+              var res =  await logoutApi()
+                if (String(res.code)==='200'){
+                    this.$message.error(res.msg)
+                    localStorage.removeItem('userInfo')
+                }else {
+                    this.$message.error("发生错误请联系管理员！")
+                }
+                window.location.href= 'login.html'
+            },
+            // 退出鼠标移入
+            handleEnter() {
+                console.log('in');
+                this.logout=true
+            },
+            // 退出鼠标移出
+            handleLeave() {
+                console.log('out');
+                this.logout=false
+            },
+            handleUserEditClose(done) {
+                this.$confirm('确认关闭？')
+                    .then(_ => {
+                        this.userEditDialogVisible=false;
+                        done();
+                    })
+                    .catch(_ => {});
+            },
+            //切换编辑状态
+            editRow(index){
+                for (let i = 0; i <this.tableData.length; i++) {
+                    if (i === index) {
+                        this.tableDataCache[i]=this.deepCopy(this.tableData[i]);
+                        this.tableData[i].editStatus = true;
+                        this.tableData[i].reasonTime=this.tableData[i].reasonTime+" 00:00:00"
+                        this.tableData[i].updateTime=this.tableData[i].updateTime+" 00:00:00"
+                        break;
+                    }
+                }
+                this.certInfoKey=!this.certInfoKey
+                this.$forceUpdate()
+
+            },
+            //取消编辑状态
+            editCancel(index){
+                for (let i = 0; i <this.tableData.length; i++) {
+                    if (i === index) {
+                        this.tableData[i]=this.deepCopy(this.tableDataCache[i]);
+                        break;
+                    }
+                }
+                this.certInfoKey=!this.certInfoKey
+                this.$forceUpdate()
+                console.log(this.tableDataCache)
+                console.log(this.tableData)
+            },
+            //提交编辑
+            updateRecord(index){
+                this.loading = true;
+                update(this.tableData[index]).then(res =>{
+                    if (String(res.code) === '200'){
+                        this.loading = false;
+                        this.$message.success(res.msg)
+                        this.getFinanceList()
+                        this.buildHistory();
+                        this.buildCompare();
+                    }else {
+                        this.loading = false;
+                        this.$message.error(res.msg)
+                    }
+                    this.certInfoKey=!this.certInfoKey
+                })
+            },
+            //删除记录
+            deleteRecord(index){
+                this.loading = true;
+                let data={id:this.tableData[index].id}
+                deleteFinance(data).then(res =>{
+                    if (String(res.code) === '200'){
+                        this.loading = false;
+                        this.$message.success(res.msg)
+                        this.getFinanceList()
+                    }else {
+                        this.loading = false;
+                        this.$message.error(res.msg)
+                    }
+                    this.certInfoKey=!this.certInfoKey
+                })
+            },
+
+            //打开新增弹窗
+            openDialog(){
+                this.dialogVisible=true
+                // this.addRecord.createTime=new Date()
+            },
+            //重置新增表单
+            resetForm(formName) {
+                this.$refs[formName].resetFields();
+            },
+            //初始化人员列表选择
+            async initUserSelectList() {
+                let res = await getUserSelectList()
+                this.users = res.data
+            },
+            //提交新增
+            async submitInsertForm(formName) {
+                this.$refs[formName].validate(async (valid) => {
+                    if (valid) {
+                        this.loading = true;
+                        console.log(this.addRecord)
+                        let res = await insert(this.addRecord)
+                        if (String(res.code) === '200'){
+                            this.loading = false;
+                            this.dialogVisible=false
+                            this.$message.success(res.msg)
+                            this.getFinanceList()
+                            this.buildHistory();
+                            this.buildCompare();
+                            this.$refs[formName].resetFields();
+                        }else {
+                            this.loading = false;
+                            this.$message.error(res.msg)
+                        }
+                    } else {
+                        this.$message.warning("请完成表单信息！！")
+                    }
+                });
+            },
+
+            //pageSize发生变化时
+            changePageSize(){
+                this.getFinanceList();
+            },
+            //条件查询
+            conditionSearch(){
+                this.page.pageCount=1
+                this.getFinanceList();
+            }
+        }
+    })
+</script>
+</body>
+
+</html>

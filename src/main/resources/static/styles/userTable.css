@@ -1,0 +1,37 @@
+.my-userTable-layout{
+    width: 810px;
+    height: 100%;
+}
+.my-user-dialog>.el-dialog>.el-dialog__body{
+    padding-top: 0px;
+}
+.userPage-area{
+    width: 100%;
+    height: 40px;
+    display: flex;
+    flex-direction: row;
+    justify-content:space-between;
+    align-items:center;
+}
+.button-area{
+    height: 50px;
+    display: flex;
+    flex-direction: row;
+    justify-content: end;
+    align-items: center;
+}
+.userTable-button{
+    height: 32px;
+    width: 118px;
+    color: #2D2F33;
+    line-height: 32px;
+    text-align: center;
+    border: 1px solid #CFD6E4 ;
+    cursor:pointer
+}
+.user-table-button/deep/{
+    color: #2D2F33;
+}
+.my-user-dialog>.el-dialog>.el-dialog__header>.el-dialog__headerbtn{
+    top:10px
+}
